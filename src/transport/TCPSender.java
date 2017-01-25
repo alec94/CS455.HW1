@@ -3,7 +3,6 @@ package transport;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.security.PrivateKey;
 
 /**
  * Created by Alec on 1/23/2017.
