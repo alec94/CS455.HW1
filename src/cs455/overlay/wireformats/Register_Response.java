@@ -1,4 +1,4 @@
-package wireformats;
+package cs455.overlay.wireformats;
 
 /**
  * Created by Alec on 1/24/2017.
@@ -7,11 +7,11 @@ public class Register_Response implements Event{
     Boolean Success;
 
     public EventType getType(){
-        return EventType.Register;
+        return EventType.Register_Response;
     }
 
-    public Byte[] getBytes(){
-        Byte[] Bytes = null;
+    public byte[] getBytes(){
+        byte[] Bytes = null;
 
         return Bytes;
     }

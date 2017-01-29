@@ -1,4 +1,4 @@
-package transport;
+package cs455.overlay.transport;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,6 +14,8 @@ public class TCPSender {
     public TCPSender(Socket socket) throws IOException {
         this.socket = socket;
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
+
+        System.out.println("New TCPSender communicating with " + socket.getInetAddress() + ":" + socket.getPort());
     }
 
     public int getPort() {

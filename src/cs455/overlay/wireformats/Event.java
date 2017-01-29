@@ -1,11 +1,11 @@
-package wireformats;
+package cs455.overlay.wireformats;
 
 /**
  * Created by Alec on 1/23/2017.
  */
 public interface Event {
     EventType getType();
-    Byte[] getBytes();
+    byte[] getBytes();
 
     enum EventType{
           Deregister
@@ -13,7 +13,8 @@ public interface Event {
         , Message
         , MessagingNodesList
         , Protocol
-        , Register
+        , Register_Request
+        , Register_Response
         , TaskComplete
         , TaskInitiate
         , TaskSummaryRequest

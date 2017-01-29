@@ -1,7 +1,7 @@
-package util;
+package cs455.overlay.util;
 
-import dijkstra.RoutingCache;
-import node.MessagingNode;
+import cs455.overlay.dijkstra.RoutingCache;
+import cs455.overlay.node.MessagingNode;
 
 import java.util.ArrayList;
 

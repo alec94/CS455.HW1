@@ -1,6 +1,6 @@
-package node;
+package cs455.overlay.node;
 
-import wireformats.Event;
+import cs455.overlay.wireformats.Event;
 
 /**
  * Created by Alec on 1/23/2017.

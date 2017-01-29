@@ -1,4 +1,4 @@
-package transport;
+package cs455.overlay.transport;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -11,29 +11,33 @@ import java.net.SocketException;
  */
 public class TCPReceiverThread implements Runnable {
     private Socket socket;
-    private DataInputStream dataInputStream;
+    private DataInputStream din;
 
     public TCPReceiverThread(Socket socket) throws IOException{
         this.socket = socket;
-        this.dataInputStream = new DataInputStream(socket.getInputStream());
+        din = new DataInputStream(socket.getInputStream());
+        System.out.println("New ReceiverThread communicating with " + socket.getInetAddress() + ":" + socket.getPort());
     }
 
-    public void run(){
+    public void run() {
         int dataLength;
-
-        while (socket != null){
+        while(socket != null){
             try{
-                dataLength = dataInputStream.readInt();
+                dataLength = din.readInt();
 
                 byte[] data = new byte[dataLength];
-                dataInputStream.readFully(data, 0, dataLength);
+                din.readFully(data,0,dataLength);
+
             }catch (SocketException se){
-                System.out.println(se.getMessage());
+                System.out.println("TCPReciverThread SocketException: " + se.getMessage());
                 break;
             }catch (IOException ioe){
-                System.out.println(ioe.getMessage());
+                System.out.println("TCPRecieverThread IOException: " + ioe.getMessage());
                 break;
             }
+
+
         }
     }
+
 }
