@@ -19,6 +19,12 @@ import java.util.ArrayList;
 public class Registry implements Node {
     private ArrayList<String> messagingNodes;
 
+    private void createOverlay(){
+       for(int i = 0; i < messagingNodes.size(); i++){
+
+        }
+    }
+
     public synchronized void onEvent(Event event){
         String key;
 
@@ -47,16 +53,21 @@ public class Registry implements Node {
                 Register registerEvent = (Register) event;
 
                 key = registerEvent.IPAddress + ":" + registerEvent.Port;
+                Socket tmpSocket = null;
 
-                if(senders.containsKey(key)){
-                   if(!messagingNodes.contains(key)){
-                       messagingNodes.add(key);
-                       System.out.println("New Messaging node registered, " + key);
-                   }
-                }else {
-                    System.out.println("Cannot find sender for key: " + key);
+                try {
+                    tmpSocket = new Socket(registerEvent.IPAddress, registerEvent.Port);
+                    if (!senders.containsKey(key)) {
+                        senders.put(key, new TCPSender(tmpSocket));
+                    }
+
+                    createReceiver(tmpSocket);
+
+                    messagingNodes.add(key);
+
+                }catch (IOException ioe){
+                    System.out.println("Error connecting to MessengerNode: " + ioe.getMessage());
                 }
-
 
                 break;
             case TaskComplete:
@@ -88,7 +99,6 @@ public class Registry implements Node {
         createReceiver(socket);
 
         String key = socket.getInetAddress() + ":" + socket.getPort();
-        key = key.replace("/","");
 
         if (!senders.containsKey(key)) {
             try {
@@ -96,6 +106,14 @@ public class Registry implements Node {
             }catch (IOException ioe){
                 System.out.println("Error creating new TCPSender. " + ioe.getMessage());
             }
+        }
+    }
+
+    public void removeSocket(Socket socket){
+        String key = socket.getInetAddress() + ":" + socket.getPort();
+
+        if (senders.containsKey(key)){
+            senders.remove(key);
         }
     }
 

@@ -13,5 +13,6 @@ public interface Node {
     HashMap<String,TCPSender> senders = new HashMap();
     void onEvent(Event event);
     void addSocket(Socket socket);
+    void removeSocket(Socket socket);
     void handleConsoleInput(String input);
 }

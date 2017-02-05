@@ -22,7 +22,7 @@ public class TCPReceiverThread implements Runnable {
         this.socket = socket;
         this.parentNode = parentNode;
         din = new DataInputStream(socket.getInputStream());
-        System.out.println("New ReceiverThread communicating with " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+        System.out.println("New ReceiverThread receiving on " + socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort());
     }
 
     public int getPort(){return this.socket.getLocalPort();}
@@ -42,14 +42,13 @@ public class TCPReceiverThread implements Runnable {
 
             }catch (SocketException se){
                 System.out.println("TCPReciverThread SocketException: " + se.getMessage());
+                parentNode.removeSocket(socket);
                 break;
             }catch (IOException ioe){
                 System.out.println("TCPRecieverThread IOException: " + ioe.getMessage());
+                parentNode.removeSocket(socket);
                 break;
             }
-
-
         }
     }
-
 }

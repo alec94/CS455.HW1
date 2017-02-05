@@ -15,13 +15,21 @@ public class TCPSender {
         this.socket = socket;
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-        System.out.println("New TCPSender communicating with " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+        System.out.println("New TCPSender sending to " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
     }
 
     public Socket getSocket(){return this.socket;}
 
     public int getPort() {
         return socket.getPort();
+    }
+
+    public void close(){
+        try {
+            this.socket.close();
+        }catch (IOException ioe){
+            System.out.print("Error closing TCPSender: " + ioe.getMessage());
+        }
     }
 
     public String toString(){

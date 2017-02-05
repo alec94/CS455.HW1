@@ -21,7 +21,6 @@ import java.util.ConcurrentModificationException;
  */
 public class MessagingNode implements Node {
     public int NodeID;
-    private TCPSender registry;
     private ConsoleThread terminal;
     private TCPServerThread serverThread;
 
@@ -46,15 +45,11 @@ public class MessagingNode implements Node {
     }
 
     private void Register(String registryHost, int registyPort) throws IOException{
-        registry = new TCPSender(new Socket(registryHost, registyPort));
+        TCPSender tmpSender = new TCPSender(new Socket(registryHost, registyPort));
 
-        TCPReceiverThread receiverThread = new TCPReceiverThread(this.registry.getSocket(),this);
+        tmpSender.sendData(new Register(InetAddress.getLocalHost().getHostAddress().replace("/",""),this.serverThread.getPort()).getBytes());
 
-        Thread thread = new Thread(receiverThread);
-        thread.start();
-
-        registry.sendData(new Register(InetAddress.getLocalHost().getHostAddress().replace("/",""),receiverThread.getPort()).getBytes());
-
+        tmpSender.close();
     }
 
     private void createReceiver(Socket socket){
@@ -82,6 +77,14 @@ public class MessagingNode implements Node {
                 System.out.println("Error creating new TCPSender. " + ioe.getMessage());
             }
 
+        }
+    }
+
+    public void removeSocket(Socket socket){
+        String key = socket.getInetAddress() + ":" + socket.getPort();
+
+        if (senders.containsKey(key)){
+            senders.remove(key);
         }
     }
 
