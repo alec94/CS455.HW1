@@ -15,11 +15,17 @@ public class TCPSender {
         this.socket = socket;
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-        System.out.println("New TCPSender communicating with " + socket.getInetAddress() + ":" + socket.getPort());
+        System.out.println("New TCPSender communicating with " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
     }
+
+    public Socket getSocket(){return this.socket;}
 
     public int getPort() {
         return socket.getPort();
+    }
+
+    public String toString(){
+        return socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
     }
 
     public void sendData(byte[] data) throws IOException {

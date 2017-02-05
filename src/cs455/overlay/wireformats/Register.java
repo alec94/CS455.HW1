@@ -9,7 +9,7 @@ import java.io.IOException;
  * Created by Alec on 1/23/2017.
  * event sent to the Register when the message node starts up
  */
-public class Register_Request implements Event {
+public class Register implements Event {
     public int Port;
     public String IPAddress;
     private EventType Type;
@@ -28,7 +28,7 @@ public class Register_Request implements Event {
             dataOutputStream.writeInt(this.Type.ordinal());
 
             //Write ip address to bytes
-            byte[] IPBytes = IPAddress.getBytes();
+            byte[] IPBytes = IPAddress.getBytes("UTF-8");
             dataOutputStream.writeInt(IPBytes.length);
             dataOutputStream.write(IPBytes);
 
@@ -45,9 +45,9 @@ public class Register_Request implements Event {
         return marshalledBytes;
     }
 
-    public Register_Request(String IPAddress, int Port){
+    public Register(String IPAddress, int Port){
         this.Port = Port;
         this.IPAddress = IPAddress;
-        this.Type = EventType.Register_Request;
+        this.Type = EventType.Register;
     }
 }

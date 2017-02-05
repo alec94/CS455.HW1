@@ -5,17 +5,15 @@ package cs455.overlay.wireformats;
  */
 public class MessagingNodeslist implements Event {
 
-    public EventType getType(){
-        return EventType.MessagingNodesList;
-    }
+    private EventType Type;
 
     public byte[] getBytes(){
-        byte[] Bytes = null;
+        byte[] marshelledBytes = null;
 
-        return Bytes;
+        return marshelledBytes;
     }
 
-    public MessagingNodeslist(){
-
+    public EventType getType(){
+        return this.Type;
     }
 }

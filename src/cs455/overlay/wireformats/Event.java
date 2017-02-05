@@ -12,9 +12,7 @@ public interface Event {
         , LinkWeights
         , Message
         , MessagingNodesList
-        , Protocol
-        , Register_Request
-        , Register_Response
+        , Register
         , TaskComplete
         , TaskInitiate
         , TaskSummaryRequest
