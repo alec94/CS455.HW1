@@ -26,11 +26,10 @@ public class MessagingNodesList implements Event {
             //Type.ordianl() gets the integer value for the Type enum
             dataOutputStream.writeInt(this.Type.ordinal());
 
-            //Write ip address to bytes
             dataOutputStream.writeInt(this.keys.length);
 
             //write list of keys to bytes
-            for (String key:this.keys) {
+            for (String key : this.keys) {
                 byte[] keyBytes = key.getBytes("UTF-8");
                 dataOutputStream.writeInt(keyBytes.length);
                 dataOutputStream.write(keyBytes);

@@ -6,7 +6,9 @@ import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.Deregister;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.Register;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -21,8 +23,20 @@ public class Registry implements Node {
 
     private void createOverlay(){
        for(int i = 0; i < messagingNodes.size(); i++){
+           String[] keys = new String[2];
+           keys[0] = messagingNodes.get((i+1) % messagingNodes.size());
+           keys[1] = messagingNodes.get((i+2) % messagingNodes.size());
 
-        }
+           MessagingNodesList list = new MessagingNodesList(keys);
+
+           TCPSender sender = senders.get(i);
+
+           try {
+               sender.sendData(list.getBytes());
+           } catch (IOException e) {
+               System.out.println("Error sending MessagingNodesList to " + sender.toString() + ". " + e.getMessage());
+           }
+       }
     }
 
     public synchronized void onEvent(Event event){

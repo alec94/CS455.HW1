@@ -5,8 +5,10 @@ import cs455.overlay.transport.TCPReceiverThread;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.Register;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+import sun.plugin.viewer.IExplorerPluginObject;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,7 +34,9 @@ public class MessagingNode implements Node {
             case Message:
                 break;
             case MessagingNodesList:
+                createOverlayConnections(((MessagingNodesList) event).getKeys());
                 break;
+
             case TaskComplete:
                 break;
             case TaskInitiate:
@@ -41,6 +45,27 @@ public class MessagingNode implements Node {
                 break;
             case TaskSummaryResponse:
                 break;
+        }
+    }
+
+    private void createOverlayConnections(String[] keys){
+        for (String key : keys) {
+            String [] params = key.split(":");
+            String IPAddress = params[0];
+            int Port = Integer.parseInt(params[1]);
+
+            try {
+                Socket tmpSocket = new Socket(IPAddress, Port);
+
+                senders.put(key, new TCPSender(tmpSocket));
+
+                TCPReceiverThread receiverThread = new TCPReceiverThread(tmpSocket, this);
+                Thread thread = new Thread(receiverThread);
+                thread.start();
+
+            }catch (IOException ioe){
+                System.out.print("Error opening socket to " + key +": " + ioe.getMessage());
+            }
         }
     }
 
@@ -64,7 +89,7 @@ public class MessagingNode implements Node {
         }
     }
 
-    public void addSocket(Socket socket){
+    public synchronized void addSocket(Socket socket){
 
         createReceiver(socket);
 
@@ -80,11 +105,13 @@ public class MessagingNode implements Node {
         }
     }
 
-    public void removeSocket(Socket socket){
+    public synchronized void removeSocket(Socket socket){
         String key = socket.getInetAddress() + ":" + socket.getPort();
 
         if (senders.containsKey(key)){
             senders.remove(key);
+        }else{
+            System.out.println("Unable to remove socket for " + key);
         }
     }
 

@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -31,7 +32,19 @@ public class EventFactory {
                     event = new Message();
                     break;
                 case MessagingNodesList:
-                    event = new MessagingNodeslist();
+
+                    int numberOfKeys = dataInputStream.readInt();
+                    String[] keys = new String[numberOfKeys];
+
+                    for (int i = 0; i < numberOfKeys; i++){
+                        int keyLength = dataInputStream.readInt();
+                        byte[] keyBytes = new byte[keyLength];
+                        dataInputStream.read(keyBytes,0,keyLength);
+
+                        keys[i] = new String(keyBytes,"UTF-8");
+                    }
+
+                    event = new MessagingNodesList(keys);
                     break;
                 case Register:
                     int IPAddressLength = dataInputStream.readInt();
