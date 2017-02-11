@@ -15,18 +15,18 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 
 /**
  * Created by Alec on 1/23/2017.
  * Messaging node
  */
-public class MessagingNode implements Node {
-    public int NodeID;
+public class MessagingNode extends BaseNode {
     private ConsoleThread terminal;
     private TCPServerThread serverThread;
 
-    public synchronized void onEvent(Event event){
+    public synchronized void onEvent(Event event, String socketKey){
 
         switch (event.getType()) {
             case LinkWeights:
@@ -45,23 +45,31 @@ public class MessagingNode implements Node {
                 break;
             case TaskSummaryResponse:
                 break;
+            case Register:
+                event = (Register) event;
+                String newKey = ((Register) event).IPAddress + ":" + ((Register) event).Port;
+                System.out.println("Register event received, " + newKey);
+                updateKey(socketKey, newKey);
+
+                break;
         }
     }
 
     private void createOverlayConnections(String[] keys){
+
+        System.out.println("Setting up overlay connections to " + Arrays.toString(keys));
+
         for (String key : keys) {
             String [] params = key.split(":");
             String IPAddress = params[0];
             int Port = Integer.parseInt(params[1]);
 
             try {
-                Socket tmpSocket = new Socket(IPAddress, Port);
+                addSocket(new Socket(IPAddress, Port),key);
 
-                senders.put(key, new TCPSender(tmpSocket));
+                String[] registerParams = this.nodeKey.split(":");
 
-                TCPReceiverThread receiverThread = new TCPReceiverThread(tmpSocket, this);
-                Thread thread = new Thread(receiverThread);
-                thread.start();
+                senders.get(key).sendData(new Register(registerParams[0],Integer.parseInt(registerParams[1])).getBytes());
 
             }catch (IOException ioe){
                 System.out.print("Error opening socket to " + key +": " + ioe.getMessage());
@@ -70,49 +78,12 @@ public class MessagingNode implements Node {
     }
 
     private void Register(String registryHost, int registyPort) throws IOException{
-        TCPSender tmpSender = new TCPSender(new Socket(registryHost, registyPort));
+        String key = registryHost + ":" + registyPort;
+        addSocket(new Socket(registryHost, registyPort),key);
 
-        tmpSender.sendData(new Register(InetAddress.getLocalHost().getHostAddress().replace("/",""),this.serverThread.getPort()).getBytes());
+        String[] registerParams = this.nodeKey.split(":");
 
-        tmpSender.close();
-    }
-
-    private void createReceiver(Socket socket){
-        try {
-            TCPReceiverThread receiverThread = new TCPReceiverThread(socket, this);
-
-            Thread thread = new Thread(receiverThread);
-            thread.start();
-
-        }catch (IOException ioe){
-            System.out.println("Error creating new TCPRecieverThread: " + ioe.getMessage());
-        }
-    }
-
-    public synchronized void addSocket(Socket socket){
-
-        createReceiver(socket);
-
-        String key = socket.getInetAddress() + ":" + socket.getPort();
-
-        if (!senders.containsKey(key)) {
-            try {
-                senders.put(key, new TCPSender(socket));
-            }catch (IOException ioe){
-                System.out.println("Error creating new TCPSender. " + ioe.getMessage());
-            }
-
-        }
-    }
-
-    public synchronized void removeSocket(Socket socket){
-        String key = socket.getInetAddress() + ":" + socket.getPort();
-
-        if (senders.containsKey(key)){
-            senders.remove(key);
-        }else{
-            System.out.println("Unable to remove socket for " + key);
-        }
+        senders.get(key).sendData(new Register(registerParams[0],Integer.parseInt(registerParams[1])).getBytes());
     }
 
     public void handleConsoleInput(String string){
@@ -130,15 +101,8 @@ public class MessagingNode implements Node {
 
     private MessagingNode(String registryHost, int registryPort) throws IOException{
 
-        try {
-            //use 0 for automatic port number
-            this.serverThread = new TCPServerThread(0,this);
-            Thread thread = new Thread(serverThread);
-            thread.start();
-
-        }catch (IOException ioe){
-            System.out.println(ioe.getMessage());
-        }
+        //port = 0 for automatic available port
+        startServerThread(0);
 
         this.Register(registryHost, registryPort);
 
@@ -146,6 +110,8 @@ public class MessagingNode implements Node {
 
         Thread thread = new Thread(this.terminal);
         thread.start();
+
+        System.out.println("New messaging node started, key: " + this.nodeKey);
 
     }
 

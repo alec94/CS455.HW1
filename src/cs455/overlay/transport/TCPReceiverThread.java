@@ -17,15 +17,32 @@ public class TCPReceiverThread implements Runnable {
     private Socket socket;
     private DataInputStream din;
     private Node parentNode;
+    //socketKey is the unigue identifier for node the socket is connected to
+    private String socketKey;
 
-    public TCPReceiverThread(Socket socket, Node parentNode) throws IOException{
+    public TCPReceiverThread(Socket socket, Node parentNode, String socketKey) throws IOException{
         this.socket = socket;
         this.parentNode = parentNode;
+        this.socketKey = socketKey;
         din = new DataInputStream(socket.getInputStream());
-        System.out.println("New ReceiverThread receiving on " + socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort());
+        //System.out.println("New ReceiverThread receiving on " + socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort());
     }
 
     public int getPort(){return this.socket.getLocalPort();}
+
+    public void setSocketKey(String socketKey){
+        this.socketKey = socketKey;
+    }
+
+    public void close(){
+        try {
+            if (!this.socket.isClosed()) {
+                this.socket.close();
+            }
+        }catch (IOException ioe){
+            System.out.print("Error closing TCPSender: " + ioe.getMessage());
+        }
+    }
 
     public void run() {
         int dataLength;
@@ -38,15 +55,15 @@ public class TCPReceiverThread implements Runnable {
 
                 Event event = EventFactory.parseEvent(data);
 
-                parentNode.onEvent(event);
+                parentNode.onEvent(event,this.socketKey);
 
             }catch (SocketException se){
-                System.out.println("TCPReciverThread SocketException: " + se.getMessage());
-                parentNode.removeSocket(socket);
+                System.out.println("TCPReciverThread SocketException: " + se.getMessage() + ", " + socketKey);
+                parentNode.removeSocket(socketKey);
                 break;
             }catch (IOException ioe){
-                System.out.println("TCPRecieverThread IOException: " + ioe.getMessage());
-                parentNode.removeSocket(socket);
+                System.out.println("TCPRecieverThread IOException: " + ioe.getMessage() + ", " + socketKey);
+                parentNode.removeSocket(socketKey);
                 break;
             }
         }

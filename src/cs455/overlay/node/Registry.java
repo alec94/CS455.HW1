@@ -13,33 +13,33 @@ import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Created by Alec on 1/23/2017.
  * Registry Node
  */
-public class Registry implements Node {
+public class Registry extends BaseNode{
     private ArrayList<String> messagingNodes;
 
-    private void createOverlay(){
+    private void createOverlay(int numberOfConnections){
        for(int i = 0; i < messagingNodes.size(); i++){
            String[] keys = new String[2];
+           String nodeKey = messagingNodes.get(i);
            keys[0] = messagingNodes.get((i+1) % messagingNodes.size());
            keys[1] = messagingNodes.get((i+2) % messagingNodes.size());
 
            MessagingNodesList list = new MessagingNodesList(keys);
 
-           TCPSender sender = senders.get(i);
+           TCPSender sender = senders.get(nodeKey);
 
-           try {
-               sender.sendData(list.getBytes());
-           } catch (IOException e) {
-               System.out.println("Error sending MessagingNodesList to " + sender.toString() + ". " + e.getMessage());
-           }
+           System.out.println("Connecting " + nodeKey + " to " + Arrays.toString(keys));
+
+           sender.sendData(list.getBytes());
        }
     }
 
-    public synchronized void onEvent(Event event){
+    public synchronized void onEvent(Event event, String socketKey){
         String key;
 
         switch (event.getType()) {
@@ -56,6 +56,10 @@ public class Registry implements Node {
                     senders.remove(key);
                 }
 
+                if(receivers.containsKey(key)){
+                    senders.remove(key);
+                }
+
                 break;
             case LinkWeights:
                 break;
@@ -67,20 +71,15 @@ public class Registry implements Node {
                 Register registerEvent = (Register) event;
 
                 key = registerEvent.IPAddress + ":" + registerEvent.Port;
-                Socket tmpSocket = null;
 
-                try {
-                    tmpSocket = new Socket(registerEvent.IPAddress, registerEvent.Port);
-                    if (!senders.containsKey(key)) {
-                        senders.put(key, new TCPSender(tmpSocket));
-                    }
-
-                    createReceiver(tmpSocket);
+                if (!messagingNodes.contains(key)){
+                    updateKey(socketKey, key);
 
                     messagingNodes.add(key);
 
-                }catch (IOException ioe){
-                    System.out.println("Error connecting to MessengerNode: " + ioe.getMessage());
+                    System.out.println("New messaging node registered, " + key);
+                } else {
+                    System.out.println("Messaging node is already registered, " + key);
                 }
 
                 break;
@@ -94,60 +93,6 @@ public class Registry implements Node {
                 break;
         }
 
-    }
-
-    private void createReceiver(Socket socket){
-        try {
-            TCPReceiverThread receiverThread = new TCPReceiverThread(socket, this);
-
-            Thread thread = new Thread(receiverThread);
-            thread.start();
-
-        }catch (IOException ioe){
-            System.out.println("Error creating new TCPRecieverThread: " + ioe.getMessage());
-        }
-    }
-
-    public void addSocket(Socket socket){
-
-        createReceiver(socket);
-
-        String key = socket.getInetAddress() + ":" + socket.getPort();
-
-        if (!senders.containsKey(key)) {
-            try {
-                senders.put(key, new TCPSender(socket));
-            }catch (IOException ioe){
-                System.out.println("Error creating new TCPSender. " + ioe.getMessage());
-            }
-        }
-    }
-
-    public void removeSocket(Socket socket){
-        String key = socket.getInetAddress() + ":" + socket.getPort();
-
-        if (senders.containsKey(key)){
-            senders.remove(key);
-        }
-    }
-
-    public Registry(int PortNumber) throws IOException{
-
-        try {
-            TCPServerThread serverThread = new TCPServerThread(PortNumber,this);
-            Thread thread = new Thread(serverThread);
-            thread.start();
-
-        }catch (IOException ioe){
-            System.out.println("TCPServerThread Start Error: " + ioe.getMessage());
-        }
-
-        ConsoleThread terminal = new ConsoleThread(this);
-
-        Thread thread = new Thread(terminal);
-        thread.start();
-
-        messagingNodes = new ArrayList<>();
     }
 
     public void handleConsoleInput(String string){
@@ -165,14 +110,41 @@ public class Registry implements Node {
             case "list-weights":
                 break;
             case "setup-overlay":
+                if (inputArray.length < 2){
+                    System.out.println("You must specify the number of connections.");
+                    System.out.println("USAGE: setup-overlay <number-of-connections.");
+                }else {
+                    try{
+                        int numberOfConnections = Integer.parseInt(inputArray[1]);
+                        createOverlay(numberOfConnections);
+                    }catch (NumberFormatException nfe){
+                        System.out.println("<number-of-connections> must be an integer.");
+                    }
+                }
                 break;
             case "send-overlay-link-weights":
                 break;
             case "start":
                 break;
             default:
-                System.out.println("Unknown command: " + string);        
+                if (string != ""){
+                    System.out.println("Unknown command: " + string);
+                }
         }
+    }
+
+    public Registry(int PortNumber) throws IOException{
+
+        startServerThread(PortNumber);
+
+        ConsoleThread terminal = new ConsoleThread(this);
+
+        Thread thread = new Thread(terminal);
+        thread.start();
+
+        messagingNodes = new ArrayList<>();
+
+        System.out.println("New registry node started, key: " + this.nodeKey);
     }
 
     public static void main(String [] args){

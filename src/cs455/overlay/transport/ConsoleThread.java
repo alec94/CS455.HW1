@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 /**
  * Created by Alec on 1/30/2017.
+ * reads input from the console and passes it to the node
  */
 public class ConsoleThread implements Runnable {
     private Node parentNode;

@@ -10,37 +10,44 @@ import java.net.Socket;
 public class TCPSender {
     private Socket socket;
     private DataOutputStream dataOutputStream;
+    //socketKey is the unique identifier for the node the socket is connected to
+    private String socketKey;
 
-    public TCPSender(Socket socket) throws IOException {
+    public TCPSender(Socket socket, String socketKey) throws IOException {
         this.socket = socket;
+        this.socketKey = socketKey;
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-        System.out.println("New TCPSender sending to " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+        //System.out.println("New TCPSender sending to " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
     }
 
-    public Socket getSocket(){return this.socket;}
-
-    public int getPort() {
-        return socket.getPort();
+    public void setSocketKey(String socketKey){
+        this.socketKey = socketKey;
     }
 
     public void close(){
         try {
-            this.socket.close();
+            if (!this.socket.isClosed()) {
+                this.socket.close();
+            }
         }catch (IOException ioe){
             System.out.print("Error closing TCPSender: " + ioe.getMessage());
         }
     }
 
-    public String toString(){
-        return socket.getInetAddress().getHostAddress() + ":" + socket.getPort();
+    public String getSocketKey(){
+        return this.socketKey;
     }
 
-    public void sendData(byte[] data) throws IOException {
+    public void sendData(byte[] data){
         int dataLength = data.length;
+        try {
+            dataOutputStream.writeInt(dataLength);
+            dataOutputStream.write(data, 0, dataLength);
+            dataOutputStream.flush();
+        }catch (IOException ioe){
+            System.out.println("TCPSender IOException: " + ioe.getMessage() + ", " + socketKey);
 
-        dataOutputStream.writeInt(dataLength);
-        dataOutputStream.write(data, 0, dataLength);
-        dataOutputStream.flush();
+        }
     }
 }

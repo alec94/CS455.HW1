@@ -17,5 +17,6 @@ public interface Event {
         , TaskInitiate
         , TaskSummaryRequest
         , TaskSummaryResponse
+        , KeyMessage
     }
 }
