@@ -4,30 +4,58 @@ import cs455.overlay.transport.ConsoleThread;
 import cs455.overlay.transport.TCPReceiverThread;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
-import cs455.overlay.wireformats.Deregister;
-import cs455.overlay.wireformats.Event;
-import cs455.overlay.wireformats.MessagingNodesList;
-import cs455.overlay.wireformats.Register;
+import cs455.overlay.wireformats.*;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Created by Alec on 1/23/2017.
  * Registry Node
  */
+
 public class Registry extends BaseNode{
     private ArrayList<String> messagingNodes;
+    private int[][] overlayWeights;
+
+    private void printOverlayWeights(){
+        for (int i = 0; i < messagingNodes.size(); i++){
+            for (int j = 0; j < messagingNodes.size(); j++){
+                if (overlayWeights[i][j] != 0){
+                    System.out.println(messagingNodes.get(i) + " " + messagingNodes.get(j) + " " + overlayWeights[i][j]);
+                }
+            }
+        }
+    }
 
     private void createOverlay(int numberOfConnections){
-       for(int i = 0; i < messagingNodes.size(); i++){
+        int numberOfNodes = messagingNodes.size();
+
+        overlayWeights = new int[numberOfNodes][numberOfNodes];
+
+        //intilize all weights to 0, if 0 then no connection exits
+        for (int i = 0; i < numberOfConnections; i++){
+            for (int j = 0; j < numberOfConnections; j++){
+                overlayWeights[i][j] = 0;
+            }
+        }
+
+       for(int i = 0; i < numberOfNodes; i++){
            String[] keys = new String[2];
            String nodeKey = messagingNodes.get(i);
-           keys[0] = messagingNodes.get((i+1) % messagingNodes.size());
-           keys[1] = messagingNodes.get((i+2) % messagingNodes.size());
+           int destNode0 = (i+1) % numberOfNodes;
+           int destNode1 = (i+2) % numberOfNodes;
+
+           keys[0] = messagingNodes.get(destNode0);
+           keys[1] = messagingNodes.get(destNode1);
+
+           //set link weights between 1-10
+           overlayWeights[i][destNode0] =  ThreadLocalRandom.current().nextInt(1, 11);
+           overlayWeights[i][destNode1] =  ThreadLocalRandom.current().nextInt(1, 11);
 
            MessagingNodesList list = new MessagingNodesList(keys);
 
@@ -37,6 +65,9 @@ public class Registry extends BaseNode{
 
            sender.sendData(list.getBytes());
        }
+
+       //send link weight information
+        LinkWeights weightsMessage = new LinkWeights();
     }
 
     public synchronized void onEvent(Event event, String socketKey){
@@ -92,7 +123,6 @@ public class Registry extends BaseNode{
             case TaskSummaryResponse:
                 break;
         }
-
     }
 
     public void handleConsoleInput(String string){
@@ -108,6 +138,7 @@ public class Registry extends BaseNode{
                 }
                 break;
             case "list-weights":
+                printOverlayWeights();
                 break;
             case "setup-overlay":
                 if (inputArray.length < 2){

@@ -29,9 +29,15 @@ public abstract class BaseNode implements Node {
         }
     }
 
+    void sendToAll(byte[] data){
+        for (TCPSender sender : senders.values()){
+            sender.sendData(data);
+        }
+    }
+
     void updateKey(String oldKey, String newKey){
 
-        System.out.println("Exchanging oldKey: " + oldKey + " for newKey: " + newKey);
+        //System.out.println("Exchanging oldKey: " + oldKey + " for newKey: " + newKey);
 
         if (senders.containsKey(oldKey)){
             senders.put(newKey,senders.remove(oldKey));

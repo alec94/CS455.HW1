@@ -48,7 +48,7 @@ public class MessagingNode extends BaseNode {
             case Register:
                 event = (Register) event;
                 String newKey = ((Register) event).IPAddress + ":" + ((Register) event).Port;
-                System.out.println("Register event received, " + newKey);
+                //System.out.println("Register event received, " + newKey);
                 updateKey(socketKey, newKey);
 
                 break;
