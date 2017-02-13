@@ -38,9 +38,10 @@ public class LinkWeights implements Event {
                 dataOutputStream.write(nodeBytes);
             }
 
+            dataOutputStream.flush();
             marshalledBytes = byteArrayOutputStream.toByteArray();
         }catch (IOException ioe){
-            System.out.println(ioe.getMessage());
+            System.out.println("Error marshalling bytes for LinkWeights. " + ioe.getMessage());
         }
 
         return marshalledBytes;
@@ -58,7 +59,7 @@ public class LinkWeights implements Event {
         return this.nodeList;
     }
 
-    public void LinkWeights(int[][] weights, String[] nodeList){
+    public LinkWeights(int[][] weights, String[] nodeList){
         this.linkWeights = weights;
         this.nodeList = nodeList;
         this.Type = EventType.LinkWeights;

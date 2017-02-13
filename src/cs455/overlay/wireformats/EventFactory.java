@@ -4,11 +4,13 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.sql.SQLSyntaxErrorException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
  * Created by Alec on 1/23/2017.
+ * returns an event object for a given byte array
  */
 public class EventFactory {
 
@@ -26,7 +28,29 @@ public class EventFactory {
                     //event = new Deregister();
                     break;
                 case LinkWeights:
-                    event = new LinkWeights();
+                    int numberOfNodes = dataInputStream.readInt();
+                    System.out.println("Number of nodes: " + numberOfNodes);
+                    int[][] linkWeights = new int[numberOfNodes][numberOfNodes];
+
+                    System.out.println("Link Weights:");
+                    for (int i = 0; i < numberOfNodes; i++){
+                        for (int j = 0; j < numberOfNodes; j++){
+                            linkWeights[i][j] = dataInputStream.readInt();
+                            System.out.print(linkWeights[i][j]);
+                        }
+
+                        System.out.println("");
+                    }
+
+                    String[] nodeList = new String[numberOfNodes];
+
+                    for (int i = 0; i < numberOfNodes; i++){
+                        byte[] stringBytes = new byte[dataInputStream.readInt()];
+                        dataInputStream.read(stringBytes,0,stringBytes.length);
+                        nodeList[i] = new String(stringBytes,"UTF-8");
+                    }
+
+                    event = new LinkWeights(linkWeights, nodeList);
                     break;
                 case Message:
                     event = new Message();
@@ -34,6 +58,7 @@ public class EventFactory {
                 case MessagingNodesList:
 
                     int numberOfKeys = dataInputStream.readInt();
+
                     String[] keys = new String[numberOfKeys];
 
                     for (int i = 0; i < numberOfKeys; i++){

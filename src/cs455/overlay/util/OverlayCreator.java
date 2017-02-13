@@ -7,12 +7,12 @@ import java.util.ArrayList;
 
 /**
  * Created by Alec on 1/23/2017.
+ * computes the overlay and creates the routing cache
  */
 public class OverlayCreator {
     private RoutingCache RoutingCache;
 
     private boolean ComputeOverlay(ArrayList<MessagingNode> MessagingNodeList){
-        RoutingCache = new RoutingCache();
 
         return true;
     }

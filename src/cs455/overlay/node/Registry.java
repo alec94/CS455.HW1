@@ -66,8 +66,12 @@ public class Registry extends BaseNode{
            sender.sendData(list.getBytes());
        }
 
+       String[] nodeList = messagingNodes.toArray(new String[messagingNodes.size()]);
+
        //send link weight information
-        LinkWeights weightsMessage = new LinkWeights();
+        LinkWeights weightsMessage = new LinkWeights(overlayWeights,nodeList);
+
+        sendToAll(weightsMessage.getBytes());
     }
 
     public synchronized void onEvent(Event event, String socketKey){
@@ -173,7 +177,7 @@ public class Registry extends BaseNode{
         Thread thread = new Thread(terminal);
         thread.start();
 
-        messagingNodes = new ArrayList<>();
+        messagingNodes = new ArrayList<String>();
 
         System.out.println("New registry node started, key: " + this.nodeKey);
     }

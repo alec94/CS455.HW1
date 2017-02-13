@@ -1,5 +1,10 @@
 package cs455.overlay.dijkstra;
 
+import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
+
+import java.sql.SQLSyntaxErrorException;
+import java.util.ArrayList;
+
 /**
  * Created by Alec on 1/23/2017.
  * Calculates the shortest path from a source node to all over nodes.
@@ -23,7 +28,7 @@ public class ShortestPath {
     }
 
     // A utility function to print the constructed distance array
-    void printSolution(int dist[], int n) {
+    void printSolution(int dist[]) {
         if (nodeCount != 0) {
             System.out.println("Vertex Distance from Source");
             for (int i = 0; i < nodeCount; i++)
@@ -33,7 +38,7 @@ public class ShortestPath {
         }
     }
 
-   public void dijkstra(int overlay[][], int sourceNode) {
+   public RoutingCache dijkstra(int overlay[][], int sourceNode, String[] nodeList) {
        // outputDistances[i] will hold the shortest path from sourceNode to i
         int outputDistances[] = new int[nodeCount];
 
@@ -49,6 +54,8 @@ public class ShortestPath {
         }
         outputDistances[sourceNode] = 0;
 
+        RoutingCache routingCache = new RoutingCache(nodeList[sourceNode]);
+
         // Find shortest path for all vertices
         for (int count = 0; count < nodeCount - 1; count++) {
             // Pick the minimum distance vertex from the set of vertices
@@ -61,6 +68,7 @@ public class ShortestPath {
 
             // Update dist value of the adjacent vertices of the
             // picked vertex.
+
             for (int v = 0; v < nodeCount; v++) {
 
                 // Update dist[v] only if is not in shortestPathTree, there is an
@@ -68,12 +76,22 @@ public class ShortestPath {
                 // v through u is smaller than current value of dist[v]
                 if (!shortestPathTree[v] && overlay[u][v] != 0 && outputDistances[u] != Integer.MAX_VALUE && outputDistances[u] + overlay[u][v] < outputDistances[v]) {
                     outputDistances[v] = outputDistances[u] + overlay[u][v];
+                    if (u != sourceNode) {
+                        routingCache.addNodeToPath(nodeList[v], new EdgeNode(nodeList[u], overlay[u][v]));
+                    } else {
+                        routingCache.addNodeToPath(nodeList[v], new EdgeNode(nodeList[v], overlay[u][v]));
+                    }
                 }
             }
         }
+        System.out.println("");
+        routingCache.printPaths();
+
+        //printSolution(outputDistances);
+        return null;
     }
 
-    public void ShortestPath(int numberOfNodes){
+    public ShortestPath(int numberOfNodes){
         this.nodeCount = numberOfNodes;
     }
 }

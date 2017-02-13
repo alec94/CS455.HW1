@@ -1,5 +1,7 @@
 package cs455.overlay.dijkstra;
 
+import cs455.overlay.transport.TCPSender;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -20,12 +22,32 @@ public class RoutingCache {
         return pathCache.get(destinationKey);
     }
 
-    public String getNextNodeKey(String destinationKey){
-        return pathCache.get(destinationKey).get(0).nodeKey;
+    public String getNextNodeKey(String destinationKey, HashMap<String,TCPSender> senders){
+        String nextNode = pathCache.get(destinationKey).get(0).nodeKey;
+
+        if (senders.keySet().contains(nextNode)) {
+            return nextNode;
+        }{
+            return getNextNodeKey(nextNode,senders);
+        }
     }
 
-    public void printPaths(){
+    void addNodeToPath(String destKey, EdgeNode node){
+        if (pathCache.containsKey(destKey)){
+            pathCache.get(destKey).add(node);
+        } else {
+            ArrayList<EdgeNode> path = new ArrayList<>();
+            path.add(node);
+            pathCache.put(destKey,path);
+            System.out.println("Created new path for " + destKey);
+        }
+
+        System.out.println("Added " + node.toString() + " to path for " + destKey);
+    }
+
+    void printPaths(){
         for (String key : pathCache.keySet()){
+            System.out.println("Path from " + nodeKey + " to " + key + ":");
             System.out.print(nodeKey);
             for (Object node : pathCache.get(key).toArray()){
                 System.out.print("--" + ((EdgeNode) node).edgeWeight + "--" + ((EdgeNode) node).nodeKey);
@@ -35,7 +57,7 @@ public class RoutingCache {
         }
     }
 
-    public void RoutingCache(String nodeKey){
+    public RoutingCache(String nodeKey){
         pathCache = new HashMap<>();
         this.nodeKey = nodeKey;
     }

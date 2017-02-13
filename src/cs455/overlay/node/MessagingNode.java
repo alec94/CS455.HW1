@@ -1,10 +1,13 @@
 package cs455.overlay.node;
 
+import cs455.overlay.dijkstra.RoutingCache;
+import cs455.overlay.dijkstra.ShortestPath;
 import cs455.overlay.transport.ConsoleThread;
 import cs455.overlay.transport.TCPReceiverThread;
 import cs455.overlay.transport.TCPSender;
 import cs455.overlay.transport.TCPServerThread;
 import cs455.overlay.wireformats.Event;
+import cs455.overlay.wireformats.LinkWeights;
 import cs455.overlay.wireformats.MessagingNodesList;
 import cs455.overlay.wireformats.Register;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
@@ -25,11 +28,14 @@ import java.util.ConcurrentModificationException;
 public class MessagingNode extends BaseNode {
     private ConsoleThread terminal;
     private TCPServerThread serverThread;
+    private RoutingCache routingCache;
 
     public synchronized void onEvent(Event event, String socketKey){
 
         switch (event.getType()) {
             case LinkWeights:
+                event = (LinkWeights) event;
+                calculateRouting(((LinkWeights) event).getLinkWeights(), ((LinkWeights) event).getNodeList());
                 break;
             case Message:
                 break;
@@ -55,6 +61,15 @@ public class MessagingNode extends BaseNode {
         }
     }
 
+    private void calculateRouting(int[][] linkWeights, String[] nodeList){
+        int myIndex = Arrays.asList(nodeList).indexOf(this.nodeKey);
+
+        ShortestPath router = new ShortestPath(nodeList.length);
+
+        this.routingCache = router.dijkstra(linkWeights,myIndex,nodeList);
+        System.out.println("Done calculating paths");
+    }
+
     private void createOverlayConnections(String[] keys){
 
         System.out.println("Setting up overlay connections to " + Arrays.toString(keys));
@@ -72,9 +87,11 @@ public class MessagingNode extends BaseNode {
                 senders.get(key).sendData(new Register(registerParams[0],Integer.parseInt(registerParams[1])).getBytes());
 
             }catch (IOException ioe){
-                System.out.print("Error opening socket to " + key +": " + ioe.getMessage());
+                System.out.print("Error opening socket to " + key +". " + ioe.getMessage());
             }
         }
+
+        System.out.println("All connections are established. Number of connections: " + keys.length);
     }
 
     private void Register(String registryHost, int registyPort) throws IOException{
