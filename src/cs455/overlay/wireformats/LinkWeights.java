@@ -33,7 +33,7 @@ public class LinkWeights implements Event {
             }
 
             for (String node : nodeList){
-                byte[] nodeBytes = node.getBytes();
+                byte[] nodeBytes = node.getBytes("UTF-8");
                 dataOutputStream.writeInt(nodeBytes.length);
                 dataOutputStream.write(nodeBytes);
             }

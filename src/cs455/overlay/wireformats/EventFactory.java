@@ -4,9 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.sql.SQLSyntaxErrorException;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Created by Alec on 1/23/2017.
@@ -14,7 +11,9 @@ import java.util.Arrays;
  */
 public class EventFactory {
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static Event parseEvent(byte[] Bytes){
+        String sourceKey;
         Event event = null;
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(Bytes);
         DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(byteArrayInputStream));
@@ -23,23 +22,34 @@ public class EventFactory {
             Event.EventType eventType = Event.EventType.values()[dataInputStream.readInt()];
 
             switch (eventType){
-
+                case Register:
                 case Deregister:
-                    //event = new Deregister();
+                    int IPAddressLength = dataInputStream.readInt();
+                    byte[] IPAddressBytes = new byte[IPAddressLength];
+                    dataInputStream.read(IPAddressBytes,0,IPAddressLength);
+                    String IPAddress = new String(IPAddressBytes,"UTF-8");
+
+                    int Port = dataInputStream.readInt();
+
+                    if (eventType == Event.EventType.Register) {
+                        event = new Register(IPAddress, Port);
+                    }else{
+                        event = new Deregister(IPAddress, Port);
+                    }
                     break;
                 case LinkWeights:
                     int numberOfNodes = dataInputStream.readInt();
-                    System.out.println("Number of nodes: " + numberOfNodes);
+                    //System.out.println("Number of nodes: " + numberOfNodes);
                     int[][] linkWeights = new int[numberOfNodes][numberOfNodes];
 
-                    System.out.println("Link Weights:");
+                    //System.out.println("Link Weights:");
                     for (int i = 0; i < numberOfNodes; i++){
                         for (int j = 0; j < numberOfNodes; j++){
                             linkWeights[i][j] = dataInputStream.readInt();
-                            System.out.print(linkWeights[i][j]);
+                            //System.out.print(linkWeights[i][j]);
                         }
 
-                        System.out.println("");
+                        //System.out.println("");
                     }
 
                     String[] nodeList = new String[numberOfNodes];
@@ -53,7 +63,19 @@ public class EventFactory {
                     event = new LinkWeights(linkWeights, nodeList);
                     break;
                 case Message:
-                    event = new Message();
+                    byte[] destinationBytes = new byte[dataInputStream.readInt()];
+                    dataInputStream.read(destinationBytes,0,destinationBytes.length);
+                    String destinationKey = new String(destinationBytes, "UTF-8");
+
+                    byte[] sourceBytes = new byte[dataInputStream.readInt()];
+                    dataInputStream.read(sourceBytes,0,sourceBytes.length);
+                    sourceKey = new String(sourceBytes,"UTF-8");
+
+                    int payload = dataInputStream.readInt();
+
+                    event = new Message(payload, destinationKey, sourceKey);
+                    //System.out.println("New message received, dest: " + ((Message) event).getDestinationKey());
+
                     break;
                 case MessagingNodesList:
 
@@ -71,27 +93,46 @@ public class EventFactory {
 
                     event = new MessagingNodesList(keys);
                     break;
-                case Register:
-                    int IPAddressLength = dataInputStream.readInt();
-                    byte[] IPAddressBytes = new byte[IPAddressLength];
-                    dataInputStream.read(IPAddressBytes,0,IPAddressLength);
-                    String IPAddress = new String(IPAddressBytes,"UTF-8");
-
-                    int Port = dataInputStream.readInt();
-
-                    event = new Register(IPAddress,Port);
-                    break;
+//                case Register:
+//                    int IPAddressLength = dataInputStream.readInt();
+//                    byte[] IPAddressBytes = new byte[IPAddressLength];
+//                    dataInputStream.read(IPAddressBytes,0,IPAddressLength);
+//                    String IPAddress = new String(IPAddressBytes,"UTF-8");
+//
+//                    int Port = dataInputStream.readInt();
+//
+//                    event = new Register(IPAddress,Port);
+//                    break;
                 case TaskComplete:
-                    //event = new TaskComplete();
+                    byte statusCode = dataInputStream.readByte();
+
+                    byte[] additionalInfoBytes = new byte[dataInputStream.readInt()];
+                    dataInputStream.read(additionalInfoBytes,0,additionalInfoBytes.length);
+
+                    String additionalInfo = new String(additionalInfoBytes, "UTF-8");
+                    event = new TaskComplete(statusCode,additionalInfo);
                     break;
                 case TaskInitiate:
-                    event = new TaskInitiate();
+                    event = new TaskInitiate(dataInputStream.readInt());
                     break;
                 case TaskSummaryRequest:
                     event = new TaskSummaryRequest();
                     break;
                 case TaskSummaryResponse:
-                    event = new TaskSummaryResponse();
+                    byte[] sourceKeyBytes = new byte[dataInputStream.readInt()];
+                    dataInputStream.read(sourceKeyBytes,0, sourceKeyBytes.length);
+                    sourceKey = new String(sourceKeyBytes, "UTF-8");
+
+                    int sendTracker = dataInputStream.readInt();
+                    int receiveTracker = dataInputStream.readInt();
+                    int relayTracker = dataInputStream.readInt();
+                    long sendSummation = dataInputStream.readLong();
+                    long receiveSummation = dataInputStream.readLong();
+
+                    event = new TaskSummaryResponse(sourceKey, sendTracker,receiveTracker,relayTracker,sendSummation,receiveSummation);
+                    break;
+                default:
+                    System.out.println("Unknown event type: " + eventType);
                     break;
             }
 

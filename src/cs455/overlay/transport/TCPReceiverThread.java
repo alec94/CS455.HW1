@@ -6,7 +6,6 @@ import cs455.overlay.wireformats.EventFactory;
 
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -54,7 +53,7 @@ public class TCPReceiverThread implements Runnable {
                 din.readFully(data,0,dataLength);
 
                 Event event = EventFactory.parseEvent(data);
-
+                //System.out.println("Data received.");
                 parentNode.onEvent(event,this.socketKey);
 
             }catch (SocketException se){

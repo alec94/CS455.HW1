@@ -1,10 +1,5 @@
 package cs455.overlay.dijkstra;
 
-import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
-
-import java.sql.SQLSyntaxErrorException;
-import java.util.ArrayList;
-
 /**
  * Created by Alec on 1/23/2017.
  * Calculates the shortest path from a source node to all over nodes.
@@ -14,14 +9,15 @@ public class ShortestPath {
 
     // A utility function to find the vertex with minimum distance value,
     // from the set of vertices not yet included in shortest path tree
-    private int minDistance(int dist[], Boolean sptSet[]) {
+    private int minDistance(int distances[], Boolean tree[]) {
         // Initialize min value
-        int min = Integer.MAX_VALUE, min_index = -1;
+        int min = Integer.MAX_VALUE;
+        int min_index = -1;
 
-        for (int v = 0; v < nodeCount; v++)
-            if (!sptSet[v] && dist[v] <= min) {
-                min = dist[v];
-                min_index = v;
+        for (int i = 0; i < nodeCount; i++)
+            if (!tree[i] && distances[i] <= min) {
+                min = distances[i];
+                min_index = i;
             }
 
         return min_index;
@@ -41,7 +37,6 @@ public class ShortestPath {
    public RoutingCache dijkstra(int overlay[][], int sourceNode, String[] nodeList) {
        // outputDistances[i] will hold the shortest path from sourceNode to i
         int outputDistances[] = new int[nodeCount];
-
 
         // shortestPathTree[i] is true if vertex i is included in shortest
         // path tree or shortest distance from the sourceNode to i is finalized
@@ -84,11 +79,9 @@ public class ShortestPath {
                 }
             }
         }
-        System.out.println("");
-        routingCache.printPaths();
+        //routingCache.printPaths();
 
-        //printSolution(outputDistances);
-        return null;
+        return routingCache;
     }
 
     public ShortestPath(int numberOfNodes){

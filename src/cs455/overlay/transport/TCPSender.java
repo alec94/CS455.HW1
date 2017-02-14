@@ -18,7 +18,7 @@ public class TCPSender {
         this.socketKey = socketKey;
         dataOutputStream = new DataOutputStream(socket.getOutputStream());
 
-        //System.out.println("New TCPSender sending to " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+        //System.out.println("New TCPSender runningTask to " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
     }
 
     public void setSocketKey(String socketKey){

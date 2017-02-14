@@ -12,7 +12,7 @@ import java.net.Socket;
  * base node that Registry and MessagingNode both extend
  * contains methods used by both Registry and MessagingNode
  */
-public abstract class BaseNode implements Node {
+public abstract class NetworkNode implements Node {
     String nodeKey;
 
     void startServerThread(int port){

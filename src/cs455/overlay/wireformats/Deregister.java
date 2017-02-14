@@ -1,7 +1,5 @@
 package cs455.overlay.wireformats;
 
-import sun.java2d.pipe.hw.AccelDeviceEventNotifier;
-
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -30,7 +28,7 @@ public class Deregister implements Event{
             dataOutputStream.writeInt(this.Type.ordinal());
 
             //Write ip address to bytes
-            byte[] IPBytes = IPAddress.getBytes();
+            byte[] IPBytes = IPAddress.getBytes("UTF-8");
             dataOutputStream.writeInt(IPBytes.length);
             dataOutputStream.write(IPBytes);
 

@@ -23,12 +23,21 @@ public class RoutingCache {
     }
 
     public String getNextNodeKey(String destinationKey, HashMap<String,TCPSender> senders){
-        String nextNode = pathCache.get(destinationKey).get(0).nodeKey;
+        if (pathCache.containsKey(destinationKey)) {
+            //System.out.println("Getting next node for " + destinationKey);
+            String nextNode = pathCache.get(destinationKey).get(0).nodeKey;
 
-        if (senders.keySet().contains(nextNode)) {
-            return nextNode;
-        }{
-            return getNextNodeKey(nextNode,senders);
+            if (nextNode.equals(destinationKey)) {
+                //System.out.println("node: " + nextNode);
+                return nextNode;
+            } else {
+                return getNextNodeKey(nextNode, senders);
+            }
+
+        }else{
+            System.out.println("No cache exits for " + destinationKey);
+            System.out.println("Available caches: " + pathCache.keySet().toString());
+            return "";
         }
     }
 
@@ -39,15 +48,15 @@ public class RoutingCache {
             ArrayList<EdgeNode> path = new ArrayList<>();
             path.add(node);
             pathCache.put(destKey,path);
-            System.out.println("Created new path for " + destKey);
+            //System.out.println("Created new path for " + destKey);
         }
 
-        System.out.println("Added " + node.toString() + " to path for " + destKey);
+        //System.out.println("Added " + node.toString() + " to path for " + destKey);
     }
 
-    void printPaths(){
+    public void printPaths(){
         for (String key : pathCache.keySet()){
-            System.out.println("Path from " + nodeKey + " to " + key + ":");
+            //System.out.println("Path from " + nodeKey + " to " + key + ":");
             System.out.print(nodeKey);
             for (Object node : pathCache.get(key).toArray()){
                 System.out.print("--" + ((EdgeNode) node).edgeWeight + "--" + ((EdgeNode) node).nodeKey);

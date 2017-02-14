@@ -27,8 +27,8 @@ public class TaskComplete implements Event {
             //Write StatusCode to bytes
             dataOutputStream.writeByte(StatusCode);
 
-            //Write ip address to bytes
-            byte[] IPBytes = AdditionalInfo.getBytes();
+            //Write additional info to bytes
+            byte[] IPBytes = AdditionalInfo.getBytes("UTF-8");
             dataOutputStream.writeInt(IPBytes.length);
             dataOutputStream.write(IPBytes);
 
@@ -52,6 +52,5 @@ public class TaskComplete implements Event {
         this.StatusCode = StatusCode;
         this.AdditionalInfo = AdditionalInfo;
         this.Type = EventType.TaskComplete;
-
     }
 }
