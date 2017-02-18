@@ -9,16 +9,22 @@ import java.io.IOException;
  * Created by Alec on 1/23/2017.
  * deregistration request
  */
-public class Deregister implements Event{
-    public int Port;
-    public String IPAddress;
-    private EventType Type;
+public class Deregister implements Event {
+    public final int Port;
+    public final String IPAddress;
+    private final EventType Type;
 
-    public EventType getType(){
+    public Deregister(String IPAddress, int Port) {
+        this.Port = Port;
+        this.IPAddress = IPAddress;
+        this.Type = EventType.Deregister;
+    }
+
+    public EventType getType() {
         return this.Type;
     }
 
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         byte[] marshalledBytes = null;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -38,17 +44,11 @@ public class Deregister implements Event{
             dataOutputStream.flush();
             marshalledBytes = byteArrayOutputStream.toByteArray();
 
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             System.out.println("Error getting bytes for " + Type + " event. " + ioe.getMessage());
         }
 
         return marshalledBytes;
-    }
-
-    public Deregister(String IPAddress, int Port){
-        this.Port = Port;
-        this.IPAddress = IPAddress;
-        this.Type = EventType.Deregister;
     }
 }
 

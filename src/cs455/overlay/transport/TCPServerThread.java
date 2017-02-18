@@ -14,20 +14,20 @@ import java.net.UnknownHostException;
  */
 public class TCPServerThread implements Runnable {
     private ServerSocket serverSocket;
-    private int port;
-    private Node parentNode;
+    private final int port;
+    private final Node parentNode;
 
-    public TCPServerThread(int port, Node parentNode) throws IOException {
+    public TCPServerThread(int port, Node parentNode) {
         this.port = port;
         this.parentNode = parentNode;
     }
 
     //gets key for this serverSocket, this is used as the identifier for this node.
-    public String getKey(){
+    public String getKey() {
         String key = "";
 
         try {
-            key = InetAddress.getLocalHost().getHostAddress().replace("/","") + ":" + serverSocket.getLocalPort();
+            key = InetAddress.getLocalHost().getHostAddress().replace("/", "") + ":" + serverSocket.getLocalPort();
         } catch (UnknownHostException e) {
             System.out.println("Error getting host for serverSocket, " + e.getMessage());
         }
@@ -43,8 +43,8 @@ public class TCPServerThread implements Runnable {
 
                 try {
                     Socket socket = serverSocket.accept();
-                    this.parentNode.addSocket(socket,socket.getInetAddress() + ":" + socket.getPort());
-                }catch (Exception e){
+                    this.parentNode.addSocket(socket, socket.getInetAddress() + ":" + socket.getPort());
+                } catch (Exception e) {
                     System.out.println("Exception in TCPServerThread loop: " + e.getMessage());
                     break;
                 }

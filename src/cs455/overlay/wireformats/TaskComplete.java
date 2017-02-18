@@ -10,11 +10,17 @@ import java.io.IOException;
  * Task Complete message
  */
 public class TaskComplete implements Event {
-    private EventType Type;
-    public byte StatusCode;
-    public String AdditionalInfo;
+    private final byte StatusCode;
+    public final String AdditionalInfo;
+    private final EventType Type;
 
-    public byte[] getBytes(){
+    public TaskComplete(byte StatusCode, String AdditionalInfo) {
+        this.StatusCode = StatusCode;
+        this.AdditionalInfo = AdditionalInfo;
+        this.Type = EventType.TaskComplete;
+    }
+
+    public byte[] getBytes() {
         byte[] marshelledBytes = null;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -35,22 +41,15 @@ public class TaskComplete implements Event {
             dataOutputStream.flush();
             marshelledBytes = byteArrayOutputStream.toByteArray();
 
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             System.out.println("Error getting bytes for " + Type + " event. " + ioe.getMessage());
         }
-
 
 
         return marshelledBytes;
     }
 
-    public EventType getType(){
+    public EventType getType() {
         return this.Type;
-    }
-
-    public TaskComplete(byte StatusCode, String AdditionalInfo){
-        this.StatusCode = StatusCode;
-        this.AdditionalInfo = AdditionalInfo;
-        this.Type = EventType.TaskComplete;
     }
 }

@@ -6,7 +6,6 @@ import cs455.overlay.wireformats.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,72 +15,109 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 
 public class Registry extends NetworkNode {
-    private ArrayList<String> messagingNodes;
+    private final HashMap<String, TaskSummaryResponse> taskSummaries = new HashMap<>();
+    private final ArrayList<String> messagingNodes;
     private int[][] overlayWeights;
     private nodeStatus[] status;
-    private final HashMap<String, TaskSummaryResponse> taskSummaries = new HashMap<>();
     private boolean weightsSent = false;
 
-    private enum nodeStatus{
-        runningTask,
-        done,
-        waitingForSummary,
-        receivedSummary
+    private Registry(int PortNumber) {
+
+        startServerThread(PortNumber);
+
+        ConsoleThread terminal = new ConsoleThread(this);
+
+        Thread thread = new Thread(terminal);
+        thread.start();
+
+        messagingNodes = new ArrayList<String>();
+
+        System.out.println("New registry node started, key: " + this.nodeKey);
     }
 
-    private void printOverlayWeights(){
-        for (int i = 0; i < messagingNodes.size(); i++){
-            for (int j = 0; j < messagingNodes.size(); j++){
-                if (overlayWeights[i][j] != 0){
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.out.println("You must specify the port number.");
+            System.exit(-1);
+        }
+
+        int Port = 0;
+
+        try {
+            Port = Integer.parseInt(args[0]);
+        } catch (NumberFormatException fe) {
+            System.out.println("Error: Port number must be an integer.");
+            System.exit(-1);
+        }
+
+        Registry registry = new Registry(Port);
+    }
+
+    private void printOverlayWeights() {
+        for (int i = 0; i < messagingNodes.size(); i++) {
+            for (int j = 0; j < messagingNodes.size(); j++) {
+                if (overlayWeights[i][j] != 0) {
                     System.out.println(messagingNodes.get(i) + " " + messagingNodes.get(j) + " " + overlayWeights[i][j]);
                 }
             }
         }
     }
 
-    private void createOverlay(int numberOfConnections){
+    private void createOverlay(int numberOfConnections) {
         int numberOfNodes = messagingNodes.size();
 
         overlayWeights = new int[numberOfNodes][numberOfNodes];
 
         //intilize all weights to 0, if 0 then no connection exits
-        for (int i = 0; i < numberOfConnections; i++){
-            for (int j = 0; j < numberOfConnections; j++){
+        for (int i = 0; i < numberOfConnections; i++) {
+            for (int j = 0; j < numberOfConnections; j++) {
                 overlayWeights[i][j] = 0;
             }
         }
 
-       for(int i = 0; i < numberOfNodes; i++){
-           String[] keys = new String[2];
-           String nodeKey = messagingNodes.get(i);
-           int destNode0 = (i+1) % numberOfNodes;
-           int destNode1 = (i+2) % numberOfNodes;
+        for (int i = 0; i < numberOfNodes; i++) {
+            String[] keys = new String[2];
+            String nodeKey = messagingNodes.get(i);
+            int destNode0 = (i + 1) % numberOfNodes;
+            int destNode1 = (i + 2) % numberOfNodes;
 
-           keys[0] = messagingNodes.get(destNode0);
-           keys[1] = messagingNodes.get(destNode1);
+            keys[0] = messagingNodes.get(destNode0);
+            keys[1] = messagingNodes.get(destNode1);
 
-           //set link weights between 1-10
-           overlayWeights[i][destNode0] =  ThreadLocalRandom.current().nextInt(1, 11);
-           overlayWeights[i][destNode1] =  ThreadLocalRandom.current().nextInt(1, 11);
+            //set link weights between 1-10
+            int weight0 = ThreadLocalRandom.current().nextInt(1, 11);
+            int weight1 = ThreadLocalRandom.current().nextInt(1, 11);
+            overlayWeights[i][destNode0] = weight0;
+            overlayWeights[i][destNode1] = weight1;
 
-           MessagingNodesList list = new MessagingNodesList(keys);
+            overlayWeights[destNode0][i] = weight0;
+            overlayWeights[destNode1][i] = weight1;
 
-           TCPSender sender = senders.get(nodeKey);
+            MessagingNodesList list = new MessagingNodesList(keys);
 
-           //System.out.println("Connecting " + nodeKey + " to " + Arrays.toString(keys));
+            TCPSender sender = senders.get(nodeKey);
 
-           sender.sendData(list.getBytes());
+            //System.out.println("Connecting " + nodeKey + " to " + Arrays.toString(keys));
 
-       }
+            sender.sendData(list.getBytes());
+
+        }
 
         System.out.println("Overlay created.");
+
+//        for (int i = 0; i < overlayWeights.length; i++) {
+//            for (int j = 0; j < overlayWeights[i].length; j++) {
+//                System.out.print(overlayWeights[i][j]);
+//            }
+//            System.out.println();
+//        }
     }
 
-    private void sendLinkWeights(){
+    private void sendLinkWeights() {
         String[] nodeList = messagingNodes.toArray(new String[messagingNodes.size()]);
 
         //send link weight information
-        LinkWeights weightsMessage = new LinkWeights(overlayWeights ,nodeList);
+        LinkWeights weightsMessage = new LinkWeights(overlayWeights, nodeList);
 
         sendToAll(weightsMessage.getBytes());
 
@@ -89,7 +125,7 @@ public class Registry extends NetworkNode {
         System.out.println("Link weights sent.");
     }
 
-    public synchronized void onEvent(Event event, String socketKey){
+    public void onEvent(Event event, String socketKey) {
         String key;
 
         switch (event.getType()) {
@@ -98,16 +134,16 @@ public class Registry extends NetworkNode {
 
                 key = deregisterEvent.IPAddress + ":" + deregisterEvent.Port;
 
-                if (messagingNodes.contains(key)){
+                if (messagingNodes.contains(key)) {
                     messagingNodes.remove(key);
                 }
 
-                if(senders.containsKey(key)){
+                if (senders.containsKey(key)) {
                     senders.get(key).close();
                     senders.remove(key);
                 }
 
-                if(receivers.containsKey(key)){
+                if (receivers.containsKey(key)) {
                     receivers.get(key).close();
                     receivers.remove(key);
                 }
@@ -120,7 +156,7 @@ public class Registry extends NetworkNode {
 
                 key = registerEvent.IPAddress + ":" + registerEvent.Port;
 
-                if (!messagingNodes.contains(key)){
+                if (!messagingNodes.contains(key)) {
                     updateKey(socketKey, key);
 
                     messagingNodes.add(key);
@@ -145,13 +181,13 @@ public class Registry extends NetworkNode {
                 //check if all messagingNodes are done
                 boolean done = true;
 
-                for (int i = 0; i < status.length; i++){
-                    if(status[i].equals(nodeStatus.runningTask)){
+                for (int i = 0; i < status.length; i++) {
+                    if (status[i].equals(nodeStatus.runningTask)) {
                         done = false;
                     }
                 }
 
-                if (done){
+                if (done) {
                     requestTaskSummary();
                 }
 
@@ -165,14 +201,14 @@ public class Registry extends NetworkNode {
         }
     }
 
-    private void requestTaskSummary(){
+    private void requestTaskSummary() {
         //set all status to waitingForSummary
-        for (int i = 0; i < status.length; i++){
+        for (int i = 0; i < status.length; i++) {
             status[i] = nodeStatus.waitingForSummary;
         }
         try {
-            Thread.sleep(15000);
-        }catch (InterruptedException e){
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
 
         }
 
@@ -183,18 +219,18 @@ public class Registry extends NetworkNode {
         sendToAll(new TaskSummaryRequest().getBytes());
     }
 
-    private void collectNetworkSummary(TaskSummaryResponse response){
-        if (!taskSummaries.containsKey(response.getSourceKey())){
-            taskSummaries.put(response.getSourceKey(),response);
+    private void collectNetworkSummary(TaskSummaryResponse response) {
+        if (!taskSummaries.containsKey(response.getSourceKey())) {
+            taskSummaries.put(response.getSourceKey(), response);
             //System.out.print("Received task summary for " + response.getSourceKey());
-        }else{
+        } else {
             System.out.println("Network summary for " + response.getSourceKey() + " has already been collected.");
             return;
         }
 
         //update status to summary received
-        for (int i = 0; i < status.length; i++){
-            if (response.getSourceKey().equals(messagingNodes.get(i))){
+        for (int i = 0; i < status.length; i++) {
+            if (response.getSourceKey().equals(messagingNodes.get(i))) {
                 status[i] = nodeStatus.receivedSummary;
                 break;
             }
@@ -202,30 +238,30 @@ public class Registry extends NetworkNode {
 
         //check if all summaries received
         boolean done = true;
-        for (int i = 0; i < status.length; i++){
-            if (status[i] == nodeStatus.waitingForSummary){
+        for (int i = 0; i < status.length; i++) {
+            if (status[i] == nodeStatus.waitingForSummary) {
                 done = false;
                 break;
             }
         }
 
         //if done, print network summaries
-        if (done){
+        if (done) {
             printTaskSummaries();
         }
     }
 
-    private void printTaskSummaries(){
+    private void printTaskSummaries() {
         int sentTotal = 0;
         int receivedTotal = 0;
         int relayTotal = 0;
         long sentSummationTotal = 0;
         long receivedSummationTotal = 0;
 
-        System.out.format("| %-19s | Number of messages sent | Number of messages received | Summation of sent messages | Summation of received messages | Number of messages relayed |","Node");
+        System.out.format("| %-19s | Number of messages sent | Number of messages received | Summation of sent messages | Summation of received messages | Number of messages relayed |", "Node");
         System.out.println("");
 
-        for (TaskSummaryResponse response : taskSummaries.values()){
+        for (TaskSummaryResponse response : taskSummaries.values()) {
             System.out.print("| " + response.getSourceKey());
             System.out.format(" | %-,23d", response.getSendTracker());
             System.out.format(" | %-,27d", response.getReceiveTracker());
@@ -253,18 +289,23 @@ public class Registry extends NetworkNode {
 
     }
 
-    public void handleConsoleInput(String string){
+    public void handleConsoleInput(String string) {
         String[] inputArray = string.split(" ");
-        switch (inputArray[0]){
+        switch (inputArray[0]) {
             case "runall":
                 createOverlay(4);
                 sendLinkWeights();
+                try {
+                    Thread.sleep(500);
+                } catch (Exception e) {
+
+                }
                 startRounds(Integer.parseInt(inputArray[1]));
                 break;
             case "list-messaging-nodes":
-                if (messagingNodes.isEmpty()){
+                if (messagingNodes.isEmpty()) {
                     System.out.println("Not connected to any MessagingNodes.");
-                }else {
+                } else {
                     for (Object messagingNode : messagingNodes.toArray()) {
                         System.out.println(messagingNode);
                     }
@@ -274,14 +315,14 @@ public class Registry extends NetworkNode {
                 printOverlayWeights();
                 break;
             case "setup-overlay":
-                if (inputArray.length < 2){
+                if (inputArray.length < 2) {
                     System.out.println("You must specify the number of connections.");
                     System.out.println("USAGE: setup-overlay <number-of-connections>");
-                }else {
-                    try{
+                } else {
+                    try {
                         int numberOfConnections = Integer.parseInt(inputArray[1]);
                         createOverlay(numberOfConnections);
-                    }catch (NumberFormatException nfe){
+                    } catch (NumberFormatException nfe) {
                         System.out.println("<number-of-connections> must be an integer.");
                     }
                 }
@@ -291,10 +332,10 @@ public class Registry extends NetworkNode {
                 break;
 
             case "start":
-                if (inputArray.length < 2){
+                if (inputArray.length < 2) {
                     System.out.println("You must specify the number of rounds.");
                     System.out.println("USAGE: start <number-of-rounds>");
-                }else{
+                } else {
                     if (weightsSent) {
                         try {
                             int numberOfRounds = Integer.parseInt(inputArray[1]);
@@ -304,20 +345,20 @@ public class Registry extends NetworkNode {
                         } catch (NumberFormatException nfe) {
                             System.out.println("<number-of-rounds> must be an integer.");
                         }
-                    }else{
+                    } else {
                         System.out.println("You must send the link weights before starting the rounds.");
                         System.out.println("COMMAND: send-overlay-link-weights");
                     }
                 }
                 break;
             default:
-                if (string != ""){
+                if (string != "") {
                     System.out.println("Unknown command: " + string);
                 }
         }
     }
 
-    private void startRounds(int numberOfRounds){
+    private void startRounds(int numberOfRounds) {
         status = new nodeStatus[messagingNodes.size()];
         for (int i = 0; i < status.length; i++) {
             status[i] = nodeStatus.runningTask;
@@ -326,40 +367,12 @@ public class Registry extends NetworkNode {
         sendToAll(new TaskInitiate(numberOfRounds).getBytes());
         System.out.println("Rounds started, count: " + numberOfRounds);
     }
-    public Registry(int PortNumber) throws IOException{
 
-        startServerThread(PortNumber);
-
-        ConsoleThread terminal = new ConsoleThread(this);
-
-        Thread thread = new Thread(terminal);
-        thread.start();
-
-        messagingNodes = new ArrayList<String>();
-
-        System.out.println("New registry node started, key: " + this.nodeKey);
-    }
-
-    public static void main(String [] args){
-        if (args.length < 1){
-            System.out.println("You must specify the port number.");
-            System.exit(-1);
-        }
-
-        int Port = 0;
-
-        try{
-            Port = Integer.parseInt(args[0]);
-        }catch (NumberFormatException fe){
-            System.out.println("Error: Port number must be an integer.");
-            System.exit(-1);
-        }
-
-        try {
-            Registry registry = new Registry(Port);
-        }catch (IOException ioe){
-            System.out.println("Registry Error: " + ioe.getMessage());
-        }
+    private enum nodeStatus {
+        runningTask,
+        done,
+        waitingForSummary,
+        receivedSummary
     }
 
 }

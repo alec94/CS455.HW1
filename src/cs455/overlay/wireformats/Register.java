@@ -10,15 +10,21 @@ import java.io.IOException;
  * event sent to the Register when the message node starts up
  */
 public class Register implements Event {
-    public int Port;
-    public String IPAddress;
-    private EventType Type;
+    public final int Port;
+    public final String IPAddress;
+    private final EventType Type;
 
-    public EventType getType(){
+    public Register(String IPAddress, int Port) {
+        this.Port = Port;
+        this.IPAddress = IPAddress;
+        this.Type = EventType.Register;
+    }
+
+    public EventType getType() {
         return this.Type;
     }
 
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         byte[] marshalledBytes = null;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -38,16 +44,10 @@ public class Register implements Event {
             dataOutputStream.flush();
             marshalledBytes = byteArrayOutputStream.toByteArray();
 
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             System.out.println("Error getting bytes for " + Type + " event. " + ioe.getMessage());
         }
 
         return marshalledBytes;
-    }
-
-    public Register(String IPAddress, int Port){
-        this.Port = Port;
-        this.IPAddress = IPAddress;
-        this.Type = EventType.Register;
     }
 }

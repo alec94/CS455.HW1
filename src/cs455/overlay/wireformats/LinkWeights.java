@@ -10,11 +10,17 @@ import java.io.IOException;
  * Contains the information on link weights and list of all messaging nodes
  */
 public class LinkWeights implements Event {
-    private EventType Type;
-    private int[][] linkWeights;
-    private String[] nodeList;
+    private final EventType Type;
+    private final int[][] linkWeights;
+    private final String[] nodeList;
 
-    public byte[] getBytes(){
+    public LinkWeights(int[][] weights, String[] nodeList) {
+        this.linkWeights = weights;
+        this.nodeList = nodeList;
+        this.Type = EventType.LinkWeights;
+    }
+
+    public byte[] getBytes() {
         byte[] marshalledBytes = null;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -26,13 +32,13 @@ public class LinkWeights implements Event {
             dataOutputStream.writeInt(nodeList.length);
 
             //write link weights from adjacency matrix
-            for (int i = 0; i < nodeList.length; i++){
-                for (int j = 0; j < nodeList.length; j++){
+            for (int i = 0; i < nodeList.length; i++) {
+                for (int j = 0; j < nodeList.length; j++) {
                     dataOutputStream.writeInt(linkWeights[i][j]);
                 }
             }
 
-            for (String node : nodeList){
+            for (String node : nodeList) {
                 byte[] nodeBytes = node.getBytes("UTF-8");
                 dataOutputStream.writeInt(nodeBytes.length);
                 dataOutputStream.write(nodeBytes);
@@ -40,28 +46,22 @@ public class LinkWeights implements Event {
 
             dataOutputStream.flush();
             marshalledBytes = byteArrayOutputStream.toByteArray();
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             System.out.println("Error marshalling bytes for LinkWeights. " + ioe.getMessage());
         }
 
         return marshalledBytes;
     }
 
-    public EventType getType(){
+    public EventType getType() {
         return this.Type;
     }
 
-    public int[][] getLinkWeights(){
+    public int[][] getLinkWeights() {
         return this.linkWeights;
     }
 
-    public String[] getNodeList(){
+    public String[] getNodeList() {
         return this.nodeList;
-    }
-
-    public LinkWeights(int[][] weights, String[] nodeList){
-        this.linkWeights = weights;
-        this.nodeList = nodeList;
-        this.Type = EventType.LinkWeights;
     }
 }

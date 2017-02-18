@@ -10,8 +10,13 @@ import java.io.IOException;
  * contains the number of rounds for the messaging node to send
  */
 public class TaskInitiate implements Event {
-    private EventType Type;
-    private int rounds;
+    private final EventType Type;
+    private final int rounds;
+
+    public TaskInitiate(int rounds) {
+        this.rounds = rounds;
+        this.Type = EventType.TaskInitiate;
+    }
 
     public byte[] getBytes() {
         byte[] marshalledBytes = null;
@@ -34,16 +39,11 @@ public class TaskInitiate implements Event {
         return marshalledBytes;
     }
 
-    public EventType getType(){
+    public EventType getType() {
         return this.Type;
     }
 
-    public int getRounds(){
+    public int getRounds() {
         return this.rounds;
-    }
-
-    public TaskInitiate(int rounds){
-        this.rounds = rounds;
-        this.Type = EventType.TaskInitiate;
     }
 }

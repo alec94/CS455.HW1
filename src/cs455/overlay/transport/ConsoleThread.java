@@ -9,18 +9,18 @@ import java.util.Scanner;
  * reads input from the console and passes it to the node
  */
 public class ConsoleThread implements Runnable {
-    private Node parentNode;
+    private final Node parentNode;
 
-    public void run(){
+    public ConsoleThread(Node parentNode) {
+        this.parentNode = parentNode;
+    }
+
+    public void run() {
         Scanner scanner = new Scanner(System.in);
 
-        while(scanner.hasNext()){
+        while (scanner.hasNext()) {
             final String line = scanner.nextLine();
             this.parentNode.handleConsoleInput(line);
         }
-    }
-
-    public ConsoleThread(Node parentNode){
-        this.parentNode = parentNode;
     }
 }

@@ -9,12 +9,17 @@ import java.util.HashMap;
 
 /**
  * Created by Alec on 1/23/2017.
+ * base node interface used by all node objects
  */
 public interface Node {
-    HashMap<String,TCPSender> senders = new HashMap<>();
-    HashMap<String,TCPReceiverThread> receivers = new HashMap<>();
+    HashMap<String, TCPSender> senders = new HashMap<>();
+    HashMap<String, TCPReceiverThread> receivers = new HashMap<>();
+
     void onEvent(Event event, String socketKey);
+
     void addSocket(Socket socket, String socketKey);
+
     void removeSocket(String socketKey);
+
     void handleConsoleInput(String input);
 }

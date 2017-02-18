@@ -6,16 +6,16 @@ package cs455.overlay.dijkstra;
  * used in the RoutingCache
  */
 
-public class EdgeNode {
-    public String nodeKey;
-    public int edgeWeight;
+class EdgeNode {
+    public final String nodeKey;
+    public final int edgeWeight;
 
-    public String toString(){
-        return this.nodeKey + " " + this.edgeWeight;
-    }
-
-    public EdgeNode(String nodeKey, int edgeWeight){
+    public EdgeNode(String nodeKey, int edgeWeight) {
         this.nodeKey = nodeKey;
         this.edgeWeight = edgeWeight;
+    }
+
+    public String toString() {
+        return this.nodeKey + " " + this.edgeWeight;
     }
 }

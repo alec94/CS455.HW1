@@ -10,9 +10,13 @@ import java.io.IOException;
  * Triggers the messagingNode to send the network stats to the registry
  */
 public class TaskSummaryRequest implements Event {
-    private EventType Type;
+    private final EventType Type;
 
-    public byte[] getBytes(){
+    public TaskSummaryRequest() {
+        this.Type = EventType.TaskSummaryRequest;
+    }
+
+    public byte[] getBytes() {
         byte[] marshalledBytes = null;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -23,18 +27,14 @@ public class TaskSummaryRequest implements Event {
 
             dataOutputStream.flush();
             marshalledBytes = byteArrayOutputStream.toByteArray();
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             System.out.println("Error getting bytes for " + Type + " event. " + ioe.getMessage());
         }
 
         return marshalledBytes;
     }
 
-    public EventType getType(){
+    public EventType getType() {
         return this.Type;
-    }
-
-    public TaskSummaryRequest(){
-        this.Type = EventType.TaskSummaryRequest;
     }
 }

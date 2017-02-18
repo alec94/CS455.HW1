@@ -5,7 +5,11 @@ package cs455.overlay.dijkstra;
  * Calculates the shortest path from a source node to all over nodes.
  */
 public class ShortestPath {
-    private int nodeCount;
+    private final int nodeCount;
+
+    public ShortestPath(int numberOfNodes) {
+        this.nodeCount = numberOfNodes;
+    }
 
     // A utility function to find the vertex with minimum distance value,
     // from the set of vertices not yet included in shortest path tree
@@ -23,19 +27,8 @@ public class ShortestPath {
         return min_index;
     }
 
-    // A utility function to print the constructed distance array
-    void printSolution(int dist[]) {
-        if (nodeCount != 0) {
-            System.out.println("Vertex Distance from Source");
-            for (int i = 0; i < nodeCount; i++)
-                System.out.println(i + " \t\t " + dist[i]);
-        }else{
-            System.out.println("");
-        }
-    }
-
-   public RoutingCache dijkstra(int overlay[][], int sourceNode, String[] nodeList) {
-       // outputDistances[i] will hold the shortest path from sourceNode to i
+    public RoutingCache dijkstra(int overlay[][], int sourceNode, String[] nodeList) {
+        // outputDistances[i] will hold the shortest path from sourceNode to i
         int outputDistances[] = new int[nodeCount];
 
         // shortestPathTree[i] is true if vertex i is included in shortest
@@ -82,9 +75,5 @@ public class ShortestPath {
         //routingCache.printPaths();
 
         return routingCache;
-    }
-
-    public ShortestPath(int numberOfNodes){
-        this.nodeCount = numberOfNodes;
     }
 }

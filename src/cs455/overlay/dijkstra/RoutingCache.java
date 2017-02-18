@@ -11,18 +11,27 @@ import java.util.HashMap;
  * one instance per messaging node
  */
 public class RoutingCache {
-    private HashMap<String, ArrayList<EdgeNode>> pathCache;
-    private String nodeKey;
+    private final HashMap<String, ArrayList<EdgeNode>> pathCache;
+    private final String nodeKey;
 
-    public void addPath(String destinationKey, ArrayList<EdgeNode> path){
-            pathCache.put(destinationKey, path);
+    public RoutingCache(String nodeKey) {
+        pathCache = new HashMap<>();
+        this.nodeKey = nodeKey;
     }
 
-    public ArrayList<EdgeNode> getPath(String destinationKey){
-        return pathCache.get(destinationKey);
-    }
+// --Commented out by Inspection START (2/14/2017 8:19 PM):
+//    public void addPath(String destinationKey, ArrayList<EdgeNode> path) {
+//        pathCache.put(destinationKey, path);
+//    }
+// --Commented out by Inspection STOP (2/14/2017 8:19 PM)
 
-    public String getNextNodeKey(String destinationKey, HashMap<String,TCPSender> senders){
+// --Commented out by Inspection START (2/14/2017 8:19 PM):
+//    public ArrayList<EdgeNode> getPath(String destinationKey) {
+//        return pathCache.get(destinationKey);
+//    }
+// --Commented out by Inspection STOP (2/14/2017 8:19 PM)
+
+    public String getNextNodeKey(String destinationKey, HashMap<String, TCPSender> senders) {
         if (pathCache.containsKey(destinationKey)) {
             //System.out.println("Getting next node for " + destinationKey);
             String nextNode = pathCache.get(destinationKey).get(0).nodeKey;
@@ -34,40 +43,35 @@ public class RoutingCache {
                 return getNextNodeKey(nextNode, senders);
             }
 
-        }else{
+        } else {
             System.out.println("No cache exits for " + destinationKey);
             System.out.println("Available caches: " + pathCache.keySet().toString());
             return "";
         }
     }
 
-    void addNodeToPath(String destKey, EdgeNode node){
-        if (pathCache.containsKey(destKey)){
+    void addNodeToPath(String destKey, EdgeNode node) {
+        if (pathCache.containsKey(destKey)) {
             pathCache.get(destKey).add(node);
         } else {
             ArrayList<EdgeNode> path = new ArrayList<>();
             path.add(node);
-            pathCache.put(destKey,path);
+            pathCache.put(destKey, path);
             //System.out.println("Created new path for " + destKey);
         }
 
         //System.out.println("Added " + node.toString() + " to path for " + destKey);
     }
 
-    public void printPaths(){
-        for (String key : pathCache.keySet()){
+    public void printPaths() {
+        for (String key : pathCache.keySet()) {
             //System.out.println("Path from " + nodeKey + " to " + key + ":");
             System.out.print(nodeKey);
-            for (Object node : pathCache.get(key).toArray()){
+            for (Object node : pathCache.get(key).toArray()) {
                 System.out.print("--" + ((EdgeNode) node).edgeWeight + "--" + ((EdgeNode) node).nodeKey);
             }
 
             System.out.println("");
         }
-    }
-
-    public RoutingCache(String nodeKey){
-        pathCache = new HashMap<>();
-        this.nodeKey = nodeKey;
     }
 }

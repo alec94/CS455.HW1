@@ -12,10 +12,15 @@ import java.io.IOException;
  */
 public class MessagingNodesList implements Event {
 
-    private EventType Type;
-    private String[] keys;
+    private final EventType Type;
+    private final String[] keys;
 
-    public byte[] getBytes(){
+    public MessagingNodesList(String[] keys) {
+        this.Type = EventType.MessagingNodesList;
+        this.keys = keys;
+    }
+
+    public byte[] getBytes() {
         byte[] marshelledBytes = null;
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -36,26 +41,25 @@ public class MessagingNodesList implements Event {
             dataOutputStream.flush();
             marshelledBytes = byteArrayOutputStream.toByteArray();
 
-        }catch (IOException ioe){
+        } catch (IOException ioe) {
             System.out.println("Error getting bytes for " + Type + " event. " + ioe.getMessage());
         }
         return marshelledBytes;
     }
 
-    public EventType getType(){
+    public EventType getType() {
         return this.Type;
     }
 
-    public String[] getKeys(){
+    public String[] getKeys() {
         return keys;
     }
 
-    public int numberOfNodes(){return keys.length;}
-
-    public MessagingNodesList(String[] keys){
-        this.Type = EventType.MessagingNodesList;
-        this.keys = keys;
-    }
+// --Commented out by Inspection START (2/14/2017 8:19 PM):
+//    public int numberOfNodes() {
+//        return keys.length;
+//    }
+// --Commented out by Inspection STOP (2/14/2017 8:19 PM)
 
 
 }
